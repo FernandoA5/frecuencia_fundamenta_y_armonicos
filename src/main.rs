@@ -31,24 +31,39 @@ fn main() {
     let cantidad_de_armonicos_posibles = (frecuencia_maxima / frecuencia_fundamental) as i32;
     println!("Cantidad de armónicos: {}", cantidad_de_armonicos_posibles);
 
+    let mut armonicos_repetidos: Vec<Registro> = Vec::new();
     for i in 1..(cantidad_de_armonicos_posibles+1) as usize{
-        evaluar_armonico(&registros, frecuencia_fundamental, i as i32);
-    }
-
-
-}
-fn evaluar_armonico(registros: &Vec<Registro>, frecuencia_fundamental: f64, num_armoninco: i32)-> f64{
-    let armonico = frecuencia_fundamental * (num_armoninco as f64);
-    let mut contador_apariciones_armonico= 0;
-    for registro in registros.iter(){
-        if registro.value < armonico*1.1 && registro.value > armonico*0.9{
-            contador_apariciones_armonico += 1;
+        let registro: Option<Registro> = evaluar_armonico(&registros, frecuencia_fundamental, i as i32, &armonicos_repetidos);
+        if registro.is_some(){
+            armonicos_repetidos.push(registro.unwrap());
         }
     }
-    if contador_apariciones_armonico > 1{
-        println!("Armonico {}: {} Apariciones: {}", num_armoninco, armonico, contador_apariciones_armonico);
+}
+fn evaluar_armonico(registros: &Vec<Registro>, frecuencia_fundamental: f64, num_armoninco: i32, armonicos_repetidos: &Vec<Registro>)-> Option<Registro>{
+    let armonico = frecuencia_fundamental * (num_armoninco as f64);
+    let mut armonico_encontrado: Option<Registro> = None;
+    let mut contador_apariciones_armonico= 0;
+    for registro in registros.iter(){
+        let mut saltar = false;
+        if armonicos_repetidos.len() != 0{
+            for armonico_repetido in armonicos_repetidos.iter(){
+                if registro.registro == armonico_repetido.registro{
+                    saltar = true;
+                }
+            }
+        }
+        if registro.value < armonico*1.02 && registro.value > armonico*0.98 && saltar == false{
+            contador_apariciones_armonico += 1;
+            if contador_apariciones_armonico == 1{
+                armonico_encontrado = Some(registro.clone());
+                print!("Armonico: {} | Id: {} | V_Cal: {} | V_Enc: {} | T: {} | ", num_armoninco, registro.registro, armonico, registro.value, registro.time);
+            }
+        }
     }
-    0.0
+    if contador_apariciones_armonico != 0 {
+        println!("Apariciones: {}", contador_apariciones_armonico);
+    }
+    armonico_encontrado
 }
 fn frecuencia_maxima(registros: &Vec<Registro>)-> f64{
     let mut maximo = registros[0].value;
@@ -66,10 +81,8 @@ fn ver_frecuencia_fundamental(registros: &Vec<Registro>)-> f64{
     let mut contador_maximo =0;
     let mut contador =0;
 
-    //Ahora repetimos el proceso pero tomando el siguiente valor minimo sin conciderar los que ya fueronalmacenados en id_valores_minimos
     while (contador as f64) < (registros.len() as f64) * 0.1{
         minimo=obtener_valor_minimo(&registros, &id_valores_minimos);
-        //println!("Valor minimo: {}", minimo);
         //Vemos cuantas veces se repitió el valor mínimo con una tolerancia de +- 10%
         contador = 0;
         for registro in registros.iter(){
@@ -83,16 +96,14 @@ fn ver_frecuencia_fundamental(registros: &Vec<Registro>)-> f64{
                 id_valores_minimos.push(registro.clone());
             }
         }
-        // println!("Veces que se repite el valor minimo: {}", contador);
         if contador > contador_maximo{
             contador_maximo = contador;
         }
     }
-
     println!("Apariciones de la frecuencia fundamental: {}", contador_maximo);
-
     minimo
 }
+
 fn obtener_valor_minimo(registros: &Vec<Registro>, ya_evaluados: &Vec<Registro>)-> f64{
     //Obtenemos el valor minimo de registro.value
     let mut minimo: f64;
