@@ -32,10 +32,23 @@ fn main() {
     println!("Cantidad de armónicos: {}", cantidad_de_armonicos_posibles);
 
     for i in 1..(cantidad_de_armonicos_posibles+1) as usize{
-        
+        evaluar_armonico(&registros, frecuencia_fundamental, i as i32);
     }
 
 
+}
+fn evaluar_armonico(registros: &Vec<Registro>, frecuencia_fundamental: f64, num_armoninco: i32)-> f64{
+    let armonico = frecuencia_fundamental * (num_armoninco as f64);
+    let mut contador_apariciones_armonico= 0;
+    for registro in registros.iter(){
+        if registro.value < armonico*1.1 && registro.value > armonico*0.9{
+            contador_apariciones_armonico += 1;
+        }
+    }
+    if contador_apariciones_armonico > 1{
+        println!("Armonico {}: {} Apariciones: {}", num_armoninco, armonico, contador_apariciones_armonico);
+    }
+    0.0
 }
 fn frecuencia_maxima(registros: &Vec<Registro>)-> f64{
     let mut maximo = registros[0].value;
@@ -46,7 +59,6 @@ fn frecuencia_maxima(registros: &Vec<Registro>)-> f64{
     }
     maximo
 }
-
 fn ver_frecuencia_fundamental(registros: &Vec<Registro>)-> f64{
     //Lista de ids de los valores minimos ya evaluados
     let mut id_valores_minimos: Vec<Registro> = Vec::new();
@@ -104,7 +116,6 @@ fn obtener_valor_minimo(registros: &Vec<Registro>, ya_evaluados: &Vec<Registro>)
     }
     minimo
 }
-
 fn obtener_numero_f64(numero: Option<f64>) -> Option<f64>{
     match numero {
         Some(numero) => Some(numero),
